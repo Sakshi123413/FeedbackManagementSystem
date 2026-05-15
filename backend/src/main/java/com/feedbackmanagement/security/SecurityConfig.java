@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/health/**").permitAll()
+                        .requestMatchers("/api/debug/**").permitAll() // TEMPORARY - REMOVE IN PRODUCTION
                         .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/feedback").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/feedback/{id}").permitAll()

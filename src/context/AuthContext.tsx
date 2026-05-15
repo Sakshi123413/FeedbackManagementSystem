@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useCallback } from "react"
+import api from "@/services/api"
 
 interface User {
-  id: string
+  id: number
   name: string
   email: string
+  role: string
 }
 
 interface AuthContextType {
@@ -32,38 +34,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return localStorage.getItem("token")
   })
 
-  const login = useCallback(async (email: string, _password: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1200))
+  const login = useCallback(async (email: string, password: string) => {
+    const response = await api.post("/auth/login", { email, password })
+    const { token: jwt, email: userEmail, name, role, userId } = response.data.data
 
-    const mockUser: User = {
-      id: "1",
-      name: email.split("@")[0],
-      email,
-    }
-    const mockToken = "jwt_" + Math.random().toString(36).substring(7)
-
-    setUser(mockUser)
-    setToken(mockToken)
-    localStorage.setItem("user", JSON.stringify(mockUser))
-    localStorage.setItem("token", mockToken)
+    const authUser: User = { id: userId, name, email: userEmail, role }
+    setUser(authUser)
+    setToken(jwt)
+    localStorage.setItem("user", JSON.stringify(authUser))
+    localStorage.setItem("token", jwt)
   }, [])
 
-  const signup = useCallback(async (name: string, email: string, _password: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1200))
+  const signup = useCallback(async (name: string, email: string, password: string) => {
+    const response = await api.post("/auth/signup", { name, email, password })
+    const { token: jwt, email: userEmail, name: userName, role, userId } = response.data.data
 
-    const mockUser: User = {
-      id: Math.random().toString(36).substring(7),
-      name,
-      email,
-    }
-    const mockToken = "jwt_" + Math.random().toString(36).substring(7)
-
-    setUser(mockUser)
-    setToken(mockToken)
-    localStorage.setItem("user", JSON.stringify(mockUser))
-    localStorage.setItem("token", mockToken)
+    const authUser: User = { id: userId, name: userName, email: userEmail, role }
+    setUser(authUser)
+    setToken(jwt)
+    localStorage.setItem("user", JSON.stringify(authUser))
+    localStorage.setItem("token", jwt)
   }, [])
 
   const logout = useCallback(() => {

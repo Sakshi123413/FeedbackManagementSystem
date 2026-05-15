@@ -5,7 +5,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { RatingInput } from "@/components/ui/rating-input"
 import { useToast } from "@/components/ui/toast"
-import { useAuth } from "@/context/AuthContext"
 import { submitFeedback } from "@/services/feedbackService"
 import { Send } from "lucide-react"
 
@@ -20,7 +19,6 @@ export function FeedbackForm({ onSubmitted }: FeedbackFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const { showToast } = useToast()
-  const { user } = useAuth()
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
@@ -41,7 +39,6 @@ export function FeedbackForm({ onSubmitted }: FeedbackFormProps) {
         title,
         message,
         rating,
-        userName: user?.name || "Anonymous",
       })
       showToast("Feedback submitted successfully!", "success")
       setTitle("")

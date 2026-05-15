@@ -8,19 +8,17 @@ CREATE DATABASE IF NOT EXISTS feedback_db
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
-USE feedback_db;
-
 -- ============================================
--- Drop existing tables (for clean setup)
+-- NOTE: Do NOT use DROP TABLE here.
+-- This script is for initial setup only.
+-- Tables are managed by Hibernate (ddl-auto=update).
 -- ============================================
-DROP TABLE IF EXISTS feedbacks;
-DROP TABLE IF EXISTS users;
 
 -- ============================================
 -- Table: users
 -- Stores user accounts with role-based access
 -- ============================================
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id          BIGINT          NOT NULL AUTO_INCREMENT  COMMENT 'Primary key',
     name        VARCHAR(100)    NOT NULL                 COMMENT 'Full name of the user',
     email       VARCHAR(150)    NOT NULL                 COMMENT 'Unique email address used for login',
@@ -41,16 +39,16 @@ CREATE TABLE users (
 -- ============================================
 -- Indexes: users
 -- ============================================
-CREATE INDEX idx_users_email ON users (email);
-CREATE INDEX idx_users_role ON users (role);
-CREATE INDEX idx_users_is_deleted ON users (is_deleted);
-CREATE INDEX idx_users_created_at ON users (created_at);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
+CREATE INDEX IF NOT EXISTS idx_users_is_deleted ON users (is_deleted);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON users (created_at);
 
 -- ============================================
 -- Table: feedbacks
 -- Stores user feedback submissions
 -- ============================================
-CREATE TABLE feedbacks (
+CREATE TABLE IF NOT EXISTS feedbacks (
     id          BIGINT          NOT NULL AUTO_INCREMENT  COMMENT 'Primary key',
     title       VARCHAR(200)    NOT NULL                 COMMENT 'Feedback title/subject',
     message     TEXT            NOT NULL                 COMMENT 'Detailed feedback message',
@@ -78,23 +76,23 @@ CREATE TABLE feedbacks (
 -- ============================================
 -- Indexes: feedbacks
 -- ============================================
-CREATE INDEX idx_feedbacks_user_id ON feedbacks (user_id);
-CREATE INDEX idx_feedbacks_title ON feedbacks (title);
-CREATE INDEX idx_feedbacks_status ON feedbacks (status);
-CREATE INDEX idx_feedbacks_rating ON feedbacks (rating);
-CREATE INDEX idx_feedbacks_is_deleted ON feedbacks (is_deleted);
-CREATE INDEX idx_feedbacks_created_at ON feedbacks (created_at);
-CREATE INDEX idx_feedbacks_user_status ON feedbacks (user_id, status);
-CREATE INDEX idx_feedbacks_user_deleted ON feedbacks (user_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_user_id ON feedbacks (user_id);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_title ON feedbacks (title);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_status ON feedbacks (status);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_rating ON feedbacks (rating);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_is_deleted ON feedbacks (is_deleted);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_created_at ON feedbacks (created_at);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_user_status ON feedbacks (user_id, status);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_user_deleted ON feedbacks (user_id, is_deleted);
 
 -- Composite index for search + pagination
-CREATE INDEX idx_feedbacks_search ON feedbacks (title, status, is_deleted, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_search ON feedbacks (title, status, is_deleted, created_at DESC);
 
 -- ============================================
 -- Sample Data: users
 -- Password: "password123" (BCrypt encrypted)
 -- ============================================
-INSERT INTO users (name, email, password, role) VALUES
+INSERT IGNORE INTO users (name, email, password, role) VALUES
     ('Admin User',    'admin@example.com',   '$2a$10$EqKcp1WFKVQISheBxmXNOe9r6YkiVQupMBnMRPx0n7c5n2nFzSuKu', 'ADMIN'),
     ('John Doe',      'john@example.com',    '$2a$10$EqKcp1WFKVQISheBxmXNOe9r6YkiVQupMBnMRPx0n7c5n2nFzSuKu', 'USER'),
     ('Jane Smith',    'jane@example.com',    '$2a$10$EqKcp1WFKVQISheBxmXNOe9r6YkiVQupMBnMRPx0n7c5n2nFzSuKu', 'USER'),
@@ -103,7 +101,7 @@ INSERT INTO users (name, email, password, role) VALUES
 -- ============================================
 -- Sample Data: feedbacks
 -- ============================================
-INSERT INTO feedbacks (title, message, rating, status, user_id) VALUES
+INSERT IGNORE INTO feedbacks (title, message, rating, status, user_id) VALUES
     ('Great Platform',       'The platform is very user-friendly and intuitive. Love the design!',                           5, 'NEW',      2),
     ('Slow Loading',         'Some pages take too long to load, especially the dashboard. Please optimize.',                   2, 'REVIEWED', 3),
     ('Feature Request',      'Would be great to have a dark mode option for the application.',                                4, 'NEW',      2),

@@ -103,11 +103,7 @@ public class FeedbackServiceImpl implements FeedbackService {
         Feedback feedback = feedbackRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Feedback", id));
 
-        if (!feedback.getUser().getId().equals(currentUser.getId()) &&
-                currentUser.getRole() != com.feedbackmanagement.entity.Role.ADMIN) {
-            log.warn("Unauthorized delete attempt on feedback id: {} by user: {}", id, currentUser.getEmail());
-            throw new UnauthorizedException("You are not authorized to delete this feedback");
-        }
+        validateFeedbackOwnership(feedback, currentUser, "delete");
 
         feedbackRepository.delete(feedback);
         log.info("Feedback deleted successfully with id: {}", id);
@@ -135,7 +131,8 @@ public class FeedbackServiceImpl implements FeedbackService {
     }
 
     private void validateFeedbackOwnership(Feedback feedback, CustomUserDetails currentUser, String action) {
-        if (!feedback.getUser().getId().equals(currentUser.getId())) {
+        if (!feedback.getUser().getId().equals(currentUser.getId()) &&
+                currentUser.getRole() != com.feedbackmanagement.entity.Role.ADMIN) {
             log.warn("Unauthorized {} attempt on feedback id: {} by user: {}", action, feedback.getId(), currentUser.getEmail());
             throw new UnauthorizedException("You are not authorized to " + action + " this feedback");
         }

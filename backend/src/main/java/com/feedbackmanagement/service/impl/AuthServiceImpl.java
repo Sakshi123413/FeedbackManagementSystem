@@ -74,12 +74,17 @@ public class AuthServiceImpl implements AuthService {
                     return new UnauthorizedException("Invalid email or password");
                 });
 
+        log.info("User found: id={}, email={}, role={}", user.getId(), user.getEmail(), user.getRole());
+        log.info("Stored password hash starts with: {}", user.getPassword().substring(0, Math.min(20, user.getPassword().length())));
+
         // Step 2: Authenticate using Spring Security (validates password via BCrypt)
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+            log.info("Authentication successful for email: {}", request.getEmail());
         } catch (AuthenticationException e) {
-            log.warn("Login failed for email: {} - {}", request.getEmail(), e.getMessage());
+            log.error("Login failed for email: {} - Reason: {}", request.getEmail(), e.getMessage());
+            log.error("Password mismatch - entered password length: {}", request.getPassword().length());
             throw new UnauthorizedException("Invalid email or password");
         }
 
