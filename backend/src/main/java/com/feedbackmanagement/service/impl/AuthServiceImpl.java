@@ -6,6 +6,7 @@ import com.feedbackmanagement.dto.response.AuthResponse;
 import com.feedbackmanagement.entity.Role;
 import com.feedbackmanagement.entity.User;
 import com.feedbackmanagement.exception.BadRequestException;
+import com.feedbackmanagement.exception.UnauthorizedException;
 import com.feedbackmanagement.repository.UserRepository;
 import com.feedbackmanagement.security.CustomUserDetails;
 import com.feedbackmanagement.security.JwtService;
@@ -14,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,19 +67,33 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(LoginRequest request) {
         log.info("Processing login request for email: {}", request.getEmail());
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        // Step 1: Verify user exists in database
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> {
+                    log.warn("Login attempt for non-existent email: {}", request.getEmail());
+                    return new UnauthorizedException("Invalid email or password");
+                });
 
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        // Step 2: Authenticate using Spring Security (validates password via BCrypt)
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        } catch (AuthenticationException e) {
+            log.warn("Login failed for email: {} - {}", request.getEmail(), e.getMessage());
+            throw new UnauthorizedException("Invalid email or password");
+        }
+
+        // Step 3: Generate token for the authenticated user
+        CustomUserDetails userDetails = CustomUserDetails.fromUser(user);
         String token = jwtService.generateToken(userDetails);
 
-        log.info("Login successful for user: {}", userDetails.getEmail());
+        log.info("Login successful for user: {}", user.getEmail());
         return AuthResponse.builder()
                 .token(token)
-                .email(userDetails.getEmail())
-                .name(userDetails.getName())
-                .role(userDetails.getRole().name())
-                .userId(userDetails.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .role(user.getRole().name())
+                .userId(user.getId())
                 .build();
     }
 }
